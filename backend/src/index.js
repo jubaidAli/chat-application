@@ -7,11 +7,14 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { app, server } from "./lib/socket.js";
 import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
-const __dirname = path.resolve();
+// Resolve directory of this file (ESM) to build reliable paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -27,11 +30,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/message", messageRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "frontend", "dist")));
+  // From backend/src, go up to repo root and serve frontend build
+  const distPath = path.join(__dirname, "../../frontend/dist");
+  app.use(express.static(distPath));
 
   // Express 5 uses path-to-regexp v6; use a regex catch-all
   app.get(/.*/, (req, res) => {
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
