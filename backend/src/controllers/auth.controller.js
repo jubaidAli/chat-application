@@ -41,7 +41,7 @@ export const signup = async (req, res) => {
                 _id: newUser._id,
                 fullName: newUser.fullName,
                 email: newUser.email,
-                profilePic: newUser.profilePic || 'No Profile Pic',
+                profilePic: newUser.profilePic || null,
             });
             
         } else {
@@ -74,7 +74,7 @@ export const login = async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
-            profilePic: user.profilePic || 'No Profile Pic',
+            profilePic: user.profilePic || null,
         }); 
     } catch (error) {
         console.error('Login error:', error.message);

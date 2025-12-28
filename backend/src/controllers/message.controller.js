@@ -1,5 +1,7 @@
 import User from '../models/user.model.js';
 import Message from '../models/message.model.js';
+import cloudinary from '../lib/cloudinary.js';
+import { getReceiverSocketId, io } from '../lib/socket.js';
 
 export const getUsersForSidebar = async (req, res) => {
     try {
@@ -40,6 +42,10 @@ export const sendMessage = async (req, res) => {
         const senderId = req.user.id;
         const { text, image } = req.body;
 
+        if (!text && !image) {
+            return res.status(400).json({ message: 'Message text or image is required' });
+        }
+
         let imageUrl;
         if (image) {
             const uploadResponse = await cloudinary.uploader.upload(image);
@@ -50,12 +56,16 @@ export const sendMessage = async (req, res) => {
             senderId,
             receiverId,
             text,
-            image: imageUrl || "No image provided"
+            image: imageUrl || null
         });
         
         await newMessage.save();
 
-        // todo: realtime functionality goes here with socet.io
+        // realtime functionality with socket.io
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage);
+        }
 
         res.status(201).json({ message: 'Message sent successfully', newMessage });
     } catch (error) {
